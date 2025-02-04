@@ -1,9 +1,10 @@
-from PIL import Image
-import io
+import streamlit as st
+from skimage import io
+import numpy as np
 
 def cargar_imagen(imagen_subida):
-    imagen = Image.open(imagen_subida)
+    imagen = io.imread(imagen_subida)
     return imagen
 
 def guardar_imagen(imagen, ruta):
-    imagen.save(ruta)
+    io.imsave(ruta, imagen)

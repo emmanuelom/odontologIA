@@ -1,7 +1,9 @@
 import streamlit as st 
 from streamlit_drawable_canvas import st_canvas
 from io_img import cargar_imagen, guardar_imagen
-from preprocesamiento import mejorar_contraste, seleccionar_region
+from preprocesamiento import mejorar_contraste, seleccionar_region, mejorar_contraste_clahe, mejorar_enfoque
+from PIL import Image
+import numpy as np
 
 # Estilos
 st.markdown(
@@ -51,23 +53,32 @@ imagen_subida = st.file_uploader("Sube una imagen", type=["jpg", "jpeg", "png"],
 if imagen_subida is not None:
     imagen = cargar_imagen(imagen_subida)
     
-    # Redimensionar la imagen si es muy grande
-    max_width = 700
-    max_height = 700
-    if imagen.width > max_width or imagen.height > max_height:
-        imagen.thumbnail((max_width, max_height))
+    # Conversión array a img PIL
+    if isinstance(imagen, np.ndarray):
+        imagen = Image.fromarray(imagen)
     
-    st.image(imagen, caption="Imagen cargada", use_column_width=True)
+    # Escala de imagen
+    img_width = imagen.width
+    img_height = imagen.height
+    default_width = min(img_width, 800)
+    default_height = min(img_height, 400)
     
-    # SEC-2: Seleccionar región
+    img_width = st.sidebar.number_input("Ancho de la imagen", min_value=100, max_value=800, value=default_width)
+    img_height = st.sidebar.number_input("Alto de la imagen", min_value=100, max_value=800, value=default_height)
+    
+    imagen = imagen.resize((img_width, img_height))
+    
+    st.image(imagen, caption="Imagen cargada", use_column_width=True)  # versión streamlit +1.25 usa use_container_width
+    
+    # SEC-2: Seleccionar regióN
     st.sidebar.markdown("### Seleccionar región")
     canvas_result = st_canvas(
         fill_color="rgba(255, 165, 0, 0.3)",  # Color de relleno con transparencia
         stroke_width=2,
         background_image=imagen,
         update_streamlit=True,
-        height=imagen.height,
-        width=imagen.width,
+        height=img_height,
+        width=img_width,
         drawing_mode="rect",
         key="canvas",
     )
@@ -89,7 +100,20 @@ if imagen_subida is not None:
                 if st.sidebar.button("Mejorar contraste"):
                     region_mejorada = mejorar_contraste(region, factor)
                     st.image(region_mejorada, caption="Región con contraste mejorado", use_column_width=True)
-                    
+                
+                # SEC-4: Contraste con CLAHE
+                clahe_clip = st.sidebar.slider("Clip Limit para CLAHE", 0.01, 4.0, 2.0, key="clip_limit")
+                # CLAHE GRID: Un valor más pequeño puede mejorar el contraste en áreas pequeñas
+                clahe_grid = st.sidebar.slider("Tamaño de la cuadrícula para CLAHE", 1, 16, 8, key="grid_size")
+                if st.sidebar.button("Aplicar contraste CLAHE"):
+                    region_clahe = mejorar_contraste_clahe(region, clahe_clip=clahe_clip, clahe_grid=(clahe_grid, clahe_grid))
+                    st.image(region_clahe, caption="Región con CLAHE aplicado", use_column_width=True)
+                
+                # SEC-5: Enfoque con rolling_ball
+                focus_radius = st.sidebar.slider("Radio para rolling_ball", 10, 200, 50, key="rolling_ball_radius")
+                if st.sidebar.button("Aplicar enfoque"):
+                    region_enfocada = mejorar_enfoque(region, focus_radius=focus_radius)
+                    st.image(region_enfocada, caption="Región con enfoque aplicado", use_column_width=True)
     # Agregaremos funcionamiento a estos botones luego
 ### st.sidebar.button("Segmentar imagen")
 ### st.sidebar.button("Segmentar umbrales")
