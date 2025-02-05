@@ -1,9 +1,11 @@
 import streamlit as st 
 from streamlit_drawable_canvas import st_canvas
 from io_img import cargar_imagen, guardar_imagen
-from preprocesamiento import mejorar_contraste, seleccionar_region, mejorar_contraste_clahe, mejorar_enfoque
+from preprocesamiento import mejorar_contraste, seleccionar_region, mejorar_contraste_clahe
 from PIL import Image
 import numpy as np
+from skimage import color
+from skimage.transform import resize, rescale, downscale_local_mean
 
 # Estilos
 st.markdown(
@@ -48,52 +50,82 @@ st.sidebar.markdown(
     unsafe_allow_html=True
 )
 
+
+
 # SEC-1: Cargar una imagen
 imagen_subida = st.file_uploader("Sube una imagen", type=["jpg", "jpeg", "png"], key="file_uploader")
 if imagen_subida is not None:
     imagen = cargar_imagen(imagen_subida)
     
-    # Conversión array a img PIL
+    # Conversión img skimage array a img PIL
     if isinstance(imagen, np.ndarray):
         imagen = Image.fromarray(imagen)
+    imagen = color.rgb2gray(np.array(imagen))
     
-    # Escala de imagen
-    img_width = imagen.width
-    img_height = imagen.height
-    default_width = min(img_width, 800)
-    default_height = min(img_height, 400)
+    ######### Estado de bg_imagen #########
+    if "imagen_escalada" not in st.session_state:
+        st.session_state.imagen_escalada = None
     
-    img_width = st.sidebar.number_input("Ancho de la imagen", min_value=100, max_value=800, value=default_width)
-    img_height = st.sidebar.number_input("Alto de la imagen", min_value=100, max_value=800, value=default_height)
+    # Selección de tipo de escala
+    escala_tipo = st.sidebar.selectbox("Selecciona el tipo de escala", ["Aumento de escala", "Redimensionar", "Reducción de escala"])
+        
+    if escala_tipo == "Aumento de escala":
+        escala_factor = st.sidebar.slider("Factor de escala", 0.1, 0.5, 0.25)
+        imagen_escalada = rescale(imagen, escala_factor, anti_aliasing=True)
+    elif escala_tipo == "Redimensionar":
+        img_width = st.sidebar.number_input("Ancho de la imagen", min_value=100, max_value=900, value=min(imagen.shape[1], 900))
+        img_height = st.sidebar.number_input("Alto de la imagen", min_value=100, max_value=900, value=min(imagen.shape[0], 900))
+        imagen_escalada = resize(imagen, (img_height, img_width), anti_aliasing=True)
+    elif escala_tipo == "Reducción de escala":
+        downscale_factor = st.sidebar.slider("Factor de downscale", 1, 10, 2)
+        imagen_escalada = downscale_local_mean(imagen, (downscale_factor, downscale_factor))
+        
+    st.session_state.imagen_escalada = (imagen_escalada * 255).astype(np.uint8) # imagen original escalada
+    st.image(st.session_state.imagen_escalada, caption="Imagen Original", use_column_width=True)
     
-    imagen = imagen.resize((img_width, img_height))
+    def actualizar_imagen():
+        st.experimental_rerun()
     
-    st.image(imagen, caption="Imagen cargada", use_column_width=True)  # versión streamlit +1.25 usa use_container_width
+######### Estado de Drawable canvas #########
+    if "show_canvas" not in st.session_state:
+        st.session_state.show_canvas = False
     
-    # SEC-2: Seleccionar regióN
-    st.sidebar.markdown("### Seleccionar región")
-    canvas_result = st_canvas(
-        fill_color="rgba(255, 165, 0, 0.3)",  # Color de relleno con transparencia
-        stroke_width=2,
-        background_image=imagen,
-        update_streamlit=True,
-        height=img_height,
-        width=img_width,
-        drawing_mode="rect",
-        key="canvas",
-    )
+    def activar_canvas():
+        st.session_state.show_canvas = True
+        st.experimental_rerun()
     
-    if canvas_result.json_data is not None:
-        for obj in canvas_result.json_data["objects"]:
-            if obj["type"] == "rect":
-                left = int(obj["left"])
-                top = int(obj["top"])
-                width = int(obj["width"])
-                height = int(obj["height"])
-                right = left + width
-                bottom = top + height
-                region = imagen.crop((left, top, right, bottom))
-                st.image(region, caption="Región seleccionada", use_column_width=True)
+    st.sidebar.button("Actualizar imagen", on_click=actualizar_imagen, key="update_image_btn")
+    
+    st.sidebar.button("Seleccionar región", on_click=activar_canvas, key="select_region_btn")
+    
+    
+    # SEC-2: Seleccionar región
+    if st.session_state.imagen_escalada is not None and st.session_state.show_canvas:
+        bg_imagen = Image.fromarray(st.session_state.imagen_escalada) # imagen en el drawable canvas
+        st.sidebar.markdown("### Seleccionar región")
+        canvas_result = st_canvas(
+            fill_color="rgba(255, 165, 0, 0.3)",  # Color de relleno con transparencia
+            stroke_width=2,
+            background_image=bg_imagen,
+            update_streamlit=True,
+            height=bg_imagen.height,
+            width=bg_imagen.width,
+            drawing_mode="rect",
+            key="canvas",
+        )
+        
+        if canvas_result.json_data is not None:
+            for obj in canvas_result.json_data["objects"]:
+                if obj["type"] == "rect":
+                    left = int(obj["left"])
+                    top = int(obj["top"])
+                    width = int(obj["width"])
+                    height = int(obj["height"])
+                    right = left + width
+                    bottom = top + height
+                    bg_imagen_array = np.array(bg_imagen)
+                    region = bg_imagen_array[top:bottom, left:right]
+                    st.image(region, caption="Región seleccionada", use_column_width=True)
                 
                 # SEC-3: Contraste
                 factor = st.sidebar.slider("Ajustar contraste", 0.5, 3.0, 1.0, key="contrast_slider")
@@ -108,12 +140,6 @@ if imagen_subida is not None:
                 if st.sidebar.button("Aplicar contraste CLAHE"):
                     region_clahe = mejorar_contraste_clahe(region, clahe_clip=clahe_clip, clahe_grid=(clahe_grid, clahe_grid))
                     st.image(region_clahe, caption="Región con CLAHE aplicado", use_column_width=True)
-                
-                # SEC-5: Enfoque con rolling_ball
-                focus_radius = st.sidebar.slider("Radio para rolling_ball", 10, 200, 50, key="rolling_ball_radius")
-                if st.sidebar.button("Aplicar enfoque"):
-                    region_enfocada = mejorar_enfoque(region, focus_radius=focus_radius)
-                    st.image(region_enfocada, caption="Región con enfoque aplicado", use_column_width=True)
     # Agregaremos funcionamiento a estos botones luego
 ### st.sidebar.button("Segmentar imagen")
 ### st.sidebar.button("Segmentar umbrales")
