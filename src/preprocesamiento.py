@@ -3,6 +3,9 @@ from skimage import restoration
 import numpy as np
 import cv2
 from PIL import Image
+import matplotlib.pyplot as plt
+import streamlit as st 
+
 
 
 ######### Seleccionar region #########
@@ -31,6 +34,22 @@ def mejorar_contraste_clahe(imagen, clahe_clip=2.0, clahe_grid=(8, 8)):
 
     return Image.fromarray(imagen_clahe)
 
+######### Binarización de Otsu #########
+def binarizar_otsu(imagen):
+    if isinstance(imagen, Image.Image):
+        imagen = np.array(imagen.convert('L'))
+    elif len(imagen.shape) == 3:
+        imagen = cv2.cvtColor(imagen, cv2.COLOR_BGR2GRAY)
+    
+    _, imagen_binarizada = cv2.threshold(imagen, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU) #_ es el umbral pero no lo necesitamos
+    
+    return Image.fromarray(imagen_binarizada)
 
-
-
+# Función para binarización manual
+def binarizar_manual(imagen, umbral):
+    if isinstance(imagen, Image.Image):
+        imagen = np.array(imagen.convert('L'))
+    elif len(imagen.shape) == 3:
+        imagen = cv2.cvtColor(imagen, cv2.COLOR_BGR2GRAY)
+    _, imagen_binarizada = cv2.threshold(imagen, umbral, 255, cv2.THRESH_BINARY)
+    return Image.fromarray(imagen_binarizada)
