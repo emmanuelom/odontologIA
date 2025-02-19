@@ -92,12 +92,12 @@ if imagen_subida is not None:
     
     def activar_canvas():
         st.session_state.show_canvas = True
-        st.experimental_rerun()
-    
+        
+
     st.sidebar.button("Actualizar imagen", on_click=actualizar_imagen, key="update_image_btn")
     
     st.sidebar.button("Seleccionar región", on_click=activar_canvas, key="select_region_btn")
-    
+
     
     # SEC-2: Seleccionar región
     if st.session_state.imagen_escalada is not None and st.session_state.show_canvas:
