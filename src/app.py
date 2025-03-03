@@ -27,10 +27,14 @@ st.markdown(
     }
     .stTitle {
         text-align: center;
-        color: #4CAF50;
     }
     .stMarkdown {
         text-align: center;
+    
+    .center {
+        display: flex;
+        justify-content: center;
+    }
     </style>
     """,
     unsafe_allow_html=True
@@ -38,7 +42,9 @@ st.markdown(
 
 
 # Inicio
-st.markdown("<h1 class='stTitle'>Bienvenido a odontologIA</h1>", unsafe_allow_html=True)
+# Imagen institucional
+st.markdown('<div class="center"><img src="https://www.lasallebajio.edu.mx/comunidad/images/imagotipos/Elementos%20Gráficos/Salle%20Bajío%2011.png" width="300"></div>', unsafe_allow_html=True)
+st.markdown("""<h1 class='stTitle'>Bienvenido a odontolog<span style='color: #4CAF50;'>IA</span></h1>""", unsafe_allow_html=True)
 st.markdown("<p class='stMarkdown'>Carga una imagen para comenzar</p>", unsafe_allow_html=True)
 
 st.sidebar.markdown(
