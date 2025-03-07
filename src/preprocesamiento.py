@@ -1,5 +1,5 @@
 from PIL import ImageEnhance
-from skimage import restoration
+from skimage import restoration, filters, feature
 import numpy as np
 import cv2
 from PIL import Image
@@ -53,3 +53,10 @@ def binarizar_manual(imagen, umbral):
         imagen = cv2.cvtColor(imagen, cv2.COLOR_BGR2GRAY)
     _, imagen_binarizada = cv2.threshold(imagen, umbral, 255, cv2.THRESH_BINARY)
     return Image.fromarray(imagen_binarizada)
+
+#Método para segmentación de imagen por umbral
+def segmentar_umbral(imagen, umbral):
+    return imagen > umbral
+
+def segmentar_bordes(imagen, sigma=1.0):
+    return feature.canny(imagen, sigma=sigma)

@@ -1,7 +1,7 @@
 import streamlit as st 
 from streamlit_drawable_canvas import st_canvas
 from io_img import cargar_imagen, guardar_imagen
-from preprocesamiento import mejorar_contraste, seleccionar_region, mejorar_contraste_clahe, binarizar_otsu, binarizar_manual
+from preprocesamiento import mejorar_contraste, seleccionar_region, mejorar_contraste_clahe, binarizar_otsu, binarizar_manual, segmentar_umbral, segmentar_bordes
 from PIL import Image
 import numpy as np
 from skimage import color
@@ -157,6 +157,20 @@ if imagen_subida is not None:
                 if st.sidebar.button("Aplicar Otsu manual"):
                     region_binarizada_manual = binarizar_manual(region, umbral)
                     st.image(region_binarizada_manual, caption="Región binarizada manualmente", use_column_width=True)
+                    
+                # SEC-7: Segmentación por umbral
+                umbral_seg = st.sidebar.slider("Umbral para segmentación", 0.0, 1.0, 0.5)
+                if st.sidebar.button("Aplicar segmentación por umbral"):
+                    region_segmentada = segmentar_umbral(region, umbral_seg)
+                    region_segmentada = (region_segmentada * 255).astype(np.uint8)  # Convertir a escala de grises
+                    st.image(region_segmentada, caption="Región segmentada por umbral", use_column_width=True)
+
+                # SEC-8: Segmentación por bordes
+                sigma_bordes = st.sidebar.slider("Sigma para detección de bordes", 0.1, 5.0, 1.0)
+                if st.sidebar.button("Aplicar segmentación por bordes"):
+                    region_bordes = segmentar_bordes(region, sigma=sigma_bordes)
+                    region_bordes = (region_bordes * 255).astype(np.uint8)  # Convertir a escala de grises
+                    st.image(region_bordes, caption="Región segmentada por bordes", use_column_width=True)
     # Agregaremos funcionamiento a estos botones luego
 ### st.sidebar.button("Segmentar imagen")
 ### st.sidebar.button("Segmentar umbrales")
