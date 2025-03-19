@@ -110,7 +110,7 @@ if imagen_subida is not None:
         bg_imagen = Image.fromarray(st.session_state.imagen_escalada) # imagen en el drawable canvas
         st.sidebar.markdown("### Seleccionar región")
         canvas_result = st_canvas(
-            fill_color="rgba(255, 165, 0, 0.3)",  # Color de relleno con transparencia
+            fill_color="rgba(255, 165, 0, 0.3)",
             stroke_width=2,
             background_image=bg_imagen,
             update_streamlit=True,
@@ -141,7 +141,7 @@ if imagen_subida is not None:
                 
                 # SEC-4: Contraste con CLAHE
                 clahe_clip = st.sidebar.slider("Clip Limit para CLAHE", 0.01, 4.0, 2.0, key="clip_limit")
-                # CLAHE GRID: Un valor más pequeño puede mejorar el contraste en áreas pequeñas
+                    # CLAHE GRID: Un valor más pequeño puede mejorar el contraste en áreas pequeñas
                 clahe_grid = st.sidebar.slider("Tamaño de la cuadrícula para CLAHE", 1, 16, 8, key="grid_size")
                 if st.sidebar.button("Aplicar contraste CLAHE"):
                     region_clahe = mejorar_contraste_clahe(region, clahe_clip=clahe_clip, clahe_grid=(clahe_grid, clahe_grid))
@@ -158,13 +158,24 @@ if imagen_subida is not None:
                     region_binarizada_manual = binarizar_manual(region, umbral)
                     st.image(region_binarizada_manual, caption="Región binarizada manualmente", use_column_width=True)
                     
-                # SEC-7: Segmentación por umbral
-                umbral_seg = st.sidebar.slider("Umbral para segmentación", 0.0, 1.0, 0.5)
-                if st.sidebar.button("Aplicar segmentación por umbral"):
-                    region_segmentada = segmentar_umbral(region, umbral_seg)
-                    region_segmentada = (region_segmentada * 255).astype(np.uint8)  # Convertir a escala de grises
-                    st.image(region_segmentada, caption="Región segmentada por umbral", use_column_width=True)
-
+                # SEC-7: Segmentación por rango de umbrales
+                umbral_min, umbral_max = st.sidebar.slider(
+                    "Selecciona el rango de umbrales para segmentación",
+                    0.0, 1.0, (0.4, 0.9),
+                    step=0.01,
+                    key="umbral_rango"
+                )
+                    
+                    # Aplicar segmentación automáticamente al ajustar los sliders
+                if st.sidebar.button("Aplicar segmentación por rango de umbrales"):
+                    if umbral_min < umbral_max:
+                        region_normalizada = region / 255.0  # Escalar a 0-1
+                        region_segmentada = (region_normalizada >= umbral_min) & (region_normalizada <= umbral_max)
+                        region_segmentada = (region_segmentada * 255).astype(np.uint8)  # Convertir a 0-255         
+                        st.image(region_segmentada, caption="Región segmentada por rango de umbrales", use_column_width=True)
+                    else:
+                        st.error("El umbral mínimo debe ser menor que el umbral máximo.")
+                            
                 # SEC-8: Segmentación por bordes
                 sigma_bordes = st.sidebar.slider("Sigma para detección de bordes", 0.1, 5.0, 1.0)
                 if st.sidebar.button("Aplicar segmentación por bordes"):
