@@ -1,7 +1,7 @@
 import streamlit as st 
 from streamlit_drawable_canvas import st_canvas
 from io_img import cargar_imagen, guardar_imagen
-from preprocesamiento import mejorar_contraste, seleccionar_region, mejorar_contraste_clahe, binarizar_otsu, binarizar_manual, segmentar_umbral, segmentar_bordes
+from preprocesamiento import mejorar_contraste, seleccionar_region, mejorar_contraste_clahe, binarizar_otsu, binarizar_manual, segmentar_umbral, segmentar_bordes, erosionar, dilatar
 from PIL import Image
 import numpy as np
 from skimage import color
@@ -56,7 +56,13 @@ st.sidebar.markdown(
     unsafe_allow_html=True
 )
 
-
+# Inicializar claves en st.session_state si no existen
+if 'region_seleccionada' not in st.session_state:
+    st.session_state.region_seleccionada = None
+if 'region_binarizada' not in st.session_state:
+    st.session_state.region_binarizada = None
+if 'region_bordes' not in st.session_state:
+    st.session_state.region_bordes = None
 
 # SEC-1: Cargar una imagen
 imagen_subida = st.file_uploader("Sube una imagen", type=["jpg", "jpeg", "png"], key="file_uploader")
@@ -171,7 +177,8 @@ if imagen_subida is not None:
                     if umbral_min < umbral_max:
                         region_normalizada = region / 255.0  # Escalar a 0-1
                         region_segmentada = (region_normalizada >= umbral_min) & (region_normalizada <= umbral_max)
-                        region_segmentada = (region_segmentada * 255).astype(np.uint8)  # Convertir a 0-255         
+                        region_segmentada = (region_segmentada * 255).astype(np.uint8)  # Convertir a 0-255        
+                        st.session_state.region_segmentada = region_segmentada
                         st.image(region_segmentada, caption="Región segmentada por rango de umbrales", use_column_width=True)
                     else:
                         st.error("El umbral mínimo debe ser menor que el umbral máximo.")
@@ -181,7 +188,28 @@ if imagen_subida is not None:
                 if st.sidebar.button("Aplicar segmentación por bordes"):
                     region_bordes = segmentar_bordes(region, sigma=sigma_bordes)
                     region_bordes = (region_bordes * 255).astype(np.uint8)  # Convertir a escala de grises
+                    st.session_state.region_bordes = region_bordes
                     st.image(region_bordes, caption="Región segmentada por bordes", use_column_width=True)
-    # Agregaremos funcionamiento a estos botones luego
-### st.sidebar.button("Segmentar imagen")
-### st.sidebar.button("Segmentar umbrales")
+                
+                # SEC-9: Operadores morfologicos
+                tipo_segmentacion = st.sidebar.selectbox("Selecciona el tipo de segmentación para aplicar operadores morfológicos", ["Umbrales", "Bordes"])
+                
+                if st.sidebar.button("Aplicar erosión"):
+                    if tipo_segmentacion == "Umbrales" and st.session_state.region_segmentada is not None:
+                        region_erosionada = erosionar(st.session_state.region_segmentada)
+                        st.image(region_erosionada, caption="Región erosionada (Umbrales)", use_column_width=True)
+                    elif tipo_segmentacion == "Bordes" and st.session_state.region_bordes is not None:
+                        region_erosionada = erosionar(st.session_state.region_bordes)
+                        st.image(region_erosionada, caption="Región erosionada (Bordes)", use_column_width=True)
+                    else:
+                        st.warning("Primero aplica la segmentación seleccionada")
+
+                if st.sidebar.button("Aplicar dilatación"):
+                    if tipo_segmentacion == "Umbrales" and st.session_state.region_segmentada is not None:
+                        region_dilatada = dilatar(st.session_state.region_segmentada)
+                        st.image(region_dilatada, caption="Región dilatada (Umbrales)", use_column_width=True)
+                    elif tipo_segmentacion == "Bordes" and st.session_state.region_bordes is not None:
+                        region_dilatada = dilatar(st.session_state.region_bordes)
+                        st.image(region_dilatada, caption="Región dilatada (Bordes)", use_column_width=True)
+                    else:
+                        st.warning("Primero aplica la segmentación seleccionada")

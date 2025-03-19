@@ -60,3 +60,14 @@ def segmentar_umbral(imagen, umbral):
 
 def segmentar_bordes(imagen, sigma=1.0):
     return feature.canny(imagen, sigma=sigma)
+
+######### Operadores morfológicos #########
+def erosionar(imagen, kernel_size=(3, 3), iterations=1):
+    kernel = np.ones(kernel_size, np.uint8)
+    imagen_erosionada = cv2.erode(imagen, kernel, iterations=iterations)
+    return Image.fromarray(imagen_erosionada)
+
+def dilatar(imagen, kernel_size=(3, 3), iterations=1):
+    kernel = np.ones(kernel_size, np.uint8)
+    imagen_dilatada = cv2.dilate(imagen, kernel, iterations=iterations)
+    return Image.fromarray(imagen_dilatada)
