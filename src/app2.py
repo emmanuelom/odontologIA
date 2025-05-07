@@ -1,7 +1,7 @@
 import streamlit as st
 from streamlit_cropper import st_cropper
 from io_img import cargar_imagen, guardar_imagen
-from preprocesamiento import mejorar_contraste, seleccionar_region, mejorar_contraste_clahe, binarizar_otsu, binarizar_manual, segmentar_umbral, segmentar_bordes, erosionar, dilatar
+from preprocesamiento import mejorar_contraste, seleccionar_region, mejorar_contraste_clahe, binarizar_otsu, binarizar_manual, segmentar_umbral, segmentar_bordes, erosionar, dilatar, binarizar_rango
 from PIL import Image
 import numpy as np
 from skimage import color
@@ -157,10 +157,14 @@ if imagen_subida is not None:
         
         if st.sidebar.button("Aplicar segmentación por rango de umbrales"):
             if umbral_min < umbral_max:
-                region_normalizada = cropped_img / 255.0  # Escalar a 0-1
-                region_segmentada = (region_normalizada >= umbral_min) & (region_normalizada <= umbral_max)
-                region_segmentada = (region_segmentada * 255).astype(np.uint8)  # Convertir a 0-255        
+                region_segmentada = binarizar_rango(cropped_img, umbral_min, umbral_max)
                 st.session_state.region_segmentada = region_segmentada
                 st.image(region_segmentada, caption="Región segmentada por rango de umbrales", use_column_width=True)
             else:
                 st.error("El umbral mínimo debe ser menor que el umbral máximo.")
+
+        # SEC-8: Segmentación por bordes
+        # TODO
+        
+        # SEC-9: Operadores morfologicos
+        # TODO
