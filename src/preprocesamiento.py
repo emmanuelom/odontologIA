@@ -54,6 +54,19 @@ def binarizar_manual(imagen, umbral):
     _, imagen_binarizada = cv2.threshold(imagen, umbral, 255, cv2.THRESH_BINARY)
     return Image.fromarray(imagen_binarizada)
 
+# Función para binarización por rango de umbrales
+def binarizar_rango(imagen, umbral_min, umbral_max):
+    if isinstance(imagen, Image.Image):
+        imagen = np.array(imagen.convert('L'))
+    elif len(imagen.shape) == 3:
+        imagen = cv2.cvtColor(imagen, cv2.COLOR_BGR2GRAY)
+    
+    imagen_normalizada = imagen / 255.0  # Escalar a 0-1
+    imagen_binarizada = (imagen_normalizada >= umbral_min) & (imagen_normalizada <= umbral_max)
+    imagen_binarizada = (imagen_binarizada * 255).astype(np.uint8)  # Convertir a 0-255
+    
+    return Image.fromarray(imagen_binarizada)
+
 #Método para segmentación de imagen por umbral
 def segmentar_umbral(imagen, umbral):
     return imagen > umbral
