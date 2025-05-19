@@ -1,7 +1,7 @@
 import streamlit as st 
-from streamlit_drawable_canvas import st_canvas
+from streamlit_cropper import st_cropper
 from io_img import cargar_imagen, guardar_imagen
-from preprocesamiento import mejorar_contraste, seleccionar_region, mejorar_contraste_clahe, binarizar_otsu, binarizar_manual, segmentar_umbral, segmentar_bordes, erosionar, dilatar
+from preprocesamiento import mejorar_contraste, seleccionar_region, mejorar_contraste_clahe, binarizar_otsu, binarizar_manual, segmentar_umbral, segmentar_bordes, erosionar, dilatar, binarizar_rango
 from PIL import Image
 import numpy as np
 from skimage import color
@@ -39,7 +39,6 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
-
 
 # Inicio
 # Imagen institucional
@@ -96,125 +95,95 @@ if imagen_subida is not None:
     def actualizar_imagen():
         st.experimental_rerun()
     
-######### Estado de Drawable canvas #########
-    if "show_canvas" not in st.session_state:
-        st.session_state.show_canvas = False
-    
-    def activar_canvas():
-        st.session_state.show_canvas = True
-        
+    ######### Estado de Cropper #########
+    if "show_cropper" not in st.session_state:
+        st.session_state.show_cropper = False
+
+    def activar_cropper():
+        st.session_state.show_cropper = True
 
     st.sidebar.button("Actualizar imagen", on_click=actualizar_imagen, key="update_image_btn")
-    
-    st.sidebar.button("Seleccionar región", on_click=activar_canvas, key="select_region_btn")
+    st.sidebar.button("Seleccionar región", on_click=activar_cropper, key="select_region_btn")
 
-    
-    # SEC-2: Seleccionar región
-    if st.session_state.imagen_escalada is not None and st.session_state.show_canvas:
+    # SEC-2: Seleccionar región con Cropper
+    if st.session_state.imagen_escalada is not None and st.session_state.show_cropper:
         img_arr = st.session_state.imagen_escalada
         # Si es 2D (grises), se convierte a 3D (RGB)
         if img_arr.ndim == 2:
             img_arr = np.stack([img_arr]*3, axis=-1)
-        img_arr = img_arr.astype(np.uint8)
-        bg_imagen = Image.fromarray(img_arr, mode='RGB')
-        if bg_imagen.mode == 'RGBA':
-            bg_imagen = bg_imagen.convert('RGB')
-        st.sidebar.markdown("### Seleccionar región")
-        canvas_result = st_canvas(
-            fill_color="rgba(255, 165, 0, 0.3)",
-            stroke_width=2,
-            background_image=bg_imagen,
-            update_streamlit=True,
-            height=bg_imagen.height,
-            width=bg_imagen.width,
-            drawing_mode="rect",
-            key="canvas",
-        )
-        
-        if canvas_result.json_data is not None:
-            for obj in canvas_result.json_data["objects"]:
-                if obj["type"] == "rect":
-                    left = int(obj["left"])
-                    top = int(obj["top"])
-                    width = int(obj["width"])
-                    height = int(obj["height"])
-                    right = left + width
-                    bottom = top + height
-                    bg_imagen_array = np.array(bg_imagen)
-                    region = bg_imagen_array[top:bottom, left:right]
-                    st.image(region, caption="Región seleccionada", use_column_width=True)
-                
-                # SEC-3: Contraste
-                factor = st.sidebar.slider("Ajustar contraste", 0.5, 3.0, 1.0, key="contrast_slider")
-                if st.sidebar.button("Mejorar contraste"):
-                    region_mejorada = mejorar_contraste(region, factor)
-                    st.image(region_mejorada, caption="Región con contraste mejorado", use_column_width=True)
-                
-                # SEC-4: Contraste con CLAHE
-                clahe_clip = st.sidebar.slider("Clip Limit para CLAHE", 0.01, 4.0, 2.0, key="clip_limit")
-                    # CLAHE GRID: Un valor más pequeño puede mejorar el contraste en áreas pequeñas
-                clahe_grid = st.sidebar.slider("Tamaño de la cuadrícula para CLAHE", 1, 16, 8, key="grid_size")
-                if st.sidebar.button("Aplicar contraste CLAHE"):
-                    region_clahe = mejorar_contraste_clahe(region, clahe_clip=clahe_clip, clahe_grid=(clahe_grid, clahe_grid))
-                    st.image(region_clahe, caption="Región con CLAHE aplicado", use_column_width=True)
-                
-                # SEC-5: Binarización con OTSU
-                if st.sidebar.button("Aplicar binarización de Otsu"):
-                    region_binarizada = binarizar_otsu(region)
-                    st.image(region_binarizada, caption="Región binarizada con Otsu", use_column_width=True)
-                    
-                # SEC-6: Binarización manual
-                umbral = st.sidebar.slider("Umbral para binarización manual", 0, 120, 117)
-                if st.sidebar.button("Aplicar Otsu manual"):
-                    region_binarizada_manual = binarizar_manual(region, umbral)
-                    st.image(region_binarizada_manual, caption="Región binarizada manualmente", use_column_width=True)
-                    
-                # SEC-7: Segmentación por rango de umbrales
-                umbral_min, umbral_max = st.sidebar.slider(
-                    "Selecciona el rango de umbrales para segmentación",
-                    0.0, 1.0, (0.4, 0.9),
-                    step=0.01,
-                    key="umbral_rango"
-                )
-                    
-                    # Aplicar segmentación automáticamente al ajustar los sliders
-                if st.sidebar.button("Aplicar segmentación por rango de umbrales"):
-                    if umbral_min < umbral_max:
-                        region_normalizada = region / 255.0  # Escalar a 0-1
-                        region_segmentada = (region_normalizada >= umbral_min) & (region_normalizada <= umbral_max)
-                        region_segmentada = (region_segmentada * 255).astype(np.uint8)  # Convertir a 0-255        
-                        st.session_state.region_segmentada = region_segmentada
-                        st.image(region_segmentada, caption="Región segmentada por rango de umbrales", use_column_width=True)
-                    else:
-                        st.error("El umbral mínimo debe ser menor que el umbral máximo.")
-                            
-                # SEC-8: Segmentación por bordes
-                sigma_bordes = st.sidebar.slider("Sigma para detección de bordes", 0.1, 5.0, 1.0)
-                if st.sidebar.button("Aplicar segmentación por bordes"):
-                    region_bordes = segmentar_bordes(region, sigma=sigma_bordes)
-                    region_bordes = (region_bordes * 255).astype(np.uint8)  # Convertir a escala de grises
-                    st.session_state.region_bordes = region_bordes
-                    st.image(region_bordes, caption="Región segmentada por bordes", use_column_width=True)
-                
-                # SEC-9: Operadores morfologicos
-                tipo_segmentacion = st.sidebar.selectbox("Selecciona el tipo de segmentación para aplicar operadores morfológicos", ["Umbrales", "Bordes"])
-                
-                if st.sidebar.button("Aplicar erosión"):
-                    if tipo_segmentacion == "Umbrales" and st.session_state.region_segmentada is not None:
-                        region_erosionada = erosionar(st.session_state.region_segmentada)
-                        st.image(region_erosionada, caption="Región erosionada (Umbrales)", use_column_width=True)
-                    elif tipo_segmentacion == "Bordes" and st.session_state.region_bordes is not None:
-                        region_erosionada = erosionar(st.session_state.region_bordes)
-                        st.image(region_erosionada, caption="Región erosionada (Bordes)", use_column_width=True)
-                    else:
-                        st.warning("Primero aplica la segmentación seleccionada")
+        img_pil = Image.fromarray(img_arr.astype(np.uint8), mode='RGB')
 
-                if st.sidebar.button("Aplicar dilatación"):
-                    if tipo_segmentacion == "Umbrales" and st.session_state.region_segmentada is not None:
-                        region_dilatada = dilatar(st.session_state.region_segmentada)
-                        st.image(region_dilatada, caption="Región dilatada (Umbrales)", use_column_width=True)
-                    elif tipo_segmentacion == "Bordes" and st.session_state.region_bordes is not None:
-                        region_dilatada = dilatar(st.session_state.region_bordes)
-                        st.image(region_dilatada, caption="Región dilatada (Bordes)", use_column_width=True)
-                    else:
-                        st.warning("Primero aplica la segmentación seleccionada")
+        cropped_img = st_cropper(img_pil)
+        if cropped_img is not None:
+            st.image(cropped_img, caption="Región seleccionada", use_column_width=True)
+
+            # SEC-3: Contraste
+            factor = st.sidebar.slider("Ajustar contraste", 0.5, 3.0, 1.0, key="contrast_slider")
+            if st.sidebar.button("Mejorar contraste"):
+                region_mejorada = mejorar_contraste(cropped_img, factor)
+                st.image(region_mejorada, caption="Región con contraste mejorado", use_column_width=True)
+            
+            # SEC-4: Contraste con CLAHE
+            clahe_clip = st.sidebar.slider("Clip Limit para CLAHE", 0.01, 4.0, 2.0, key="clip_limit")
+            clahe_grid = st.sidebar.slider("Tamaño de la cuadrícula para CLAHE", 1, 16, 8, key="grid_size")
+            if st.sidebar.button("Aplicar contraste CLAHE"):
+                region_clahe = mejorar_contraste_clahe(cropped_img, clahe_clip=clahe_clip, clahe_grid=(clahe_grid, clahe_grid))
+                st.image(region_clahe, caption="Región con CLAHE aplicado", use_column_width=True)
+            
+            # SEC-5: Binarización con OTSU
+            if st.sidebar.button("Aplicar binarización de Otsu"):
+                region_binarizada = binarizar_otsu(cropped_img)
+                st.image(region_binarizada, caption="Región binarizada con Otsu", use_column_width=True)
+            
+            # SEC-6: Binarización manual
+            umbral = st.sidebar.slider("Umbral para binarización manual", 0, 120, 117)
+            if st.sidebar.button("Aplicar Otsu manual"):
+                region_binarizada_manual = binarizar_manual(cropped_img, umbral)
+                st.image(region_binarizada_manual, caption="Región binarizada manualmente", use_column_width=True)
+            
+            # SEC-7: Segmentación por rango de umbrales
+            umbral_min, umbral_max = st.sidebar.slider(
+                "Selecciona el rango de umbrales para segmentación",
+                0.0, 1.0, (0.4, 0.9),
+                step=0.01,
+                key="umbral_rango"
+            )
+            
+            if st.sidebar.button("Aplicar segmentación por rango de umbrales"):
+                if umbral_min < umbral_max:
+                    region_segmentada = binarizar_rango(cropped_img, umbral_min, umbral_max)
+                    st.session_state.region_segmentada = region_segmentada
+                    st.image(region_segmentada, caption="Región segmentada por rango de umbrales", use_column_width=True)
+                else:
+                    st.error("El umbral mínimo debe ser menor que el umbral máximo.")
+
+            # SEC-8: Segmentación por bordes
+            sigma_bordes = st.sidebar.slider("Sigma para detección de bordes", 0.1, 5.0, 1.0)
+            if st.sidebar.button("Aplicar segmentación por bordes"):
+                region_bordes = segmentar_bordes(np.array(cropped_img), sigma=sigma_bordes)
+                region_bordes = (region_bordes * 255).astype(np.uint8)
+                st.session_state.region_bordes = region_bordes
+                st.image(region_bordes, caption="Región segmentada por bordes", use_column_width=True)
+            
+            # SEC-9: Operadores morfológicos
+            tipo_segmentacion = st.sidebar.selectbox("Selecciona el tipo de segmentación para aplicar operadores morfológicos", ["Umbrales", "Bordes"])
+            
+            if st.sidebar.button("Aplicar erosión"):
+                if tipo_segmentacion == "Umbrales" and st.session_state.region_segmentada is not None:
+                    region_erosionada = erosionar(st.session_state.region_segmentada)
+                    st.image(region_erosionada, caption="Región erosionada (Umbrales)", use_column_width=True)
+                elif tipo_segmentacion == "Bordes" and st.session_state.region_bordes is not None:
+                    region_erosionada = erosionar(st.session_state.region_bordes)
+                    st.image(region_erosionada, caption="Región erosionada (Bordes)", use_column_width=True)
+                else:
+                    st.warning("Primero aplica la segmentación seleccionada")
+
+            if st.sidebar.button("Aplicar dilatación"):
+                if tipo_segmentacion == "Umbrales" and st.session_state.region_segmentada is not None:
+                    region_dilatada = dilatar(st.session_state.region_segmentada)
+                    st.image(region_dilatada, caption="Región dilatada (Umbrales)", use_column_width=True)
+                elif tipo_segmentacion == "Bordes" and st.session_state.region_bordes is not None:
+                    region_dilatada = dilatar(st.session_state.region_bordes)
+                    st.image(region_dilatada, caption="Región dilatada (Bordes)", use_column_width=True)
+                else:
+                    st.warning("Primero aplica la segmentación seleccionada")
