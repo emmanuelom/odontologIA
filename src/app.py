@@ -111,9 +111,12 @@ if imagen_subida is not None:
     
     # SEC-2: Seleccionar región
     if st.session_state.imagen_escalada is not None and st.session_state.show_canvas:
-        bg_imagen = Image.fromarray(st.session_state.imagen_escalada) # imagen en el drawable canvas
-        if bg_imagen.mode != 'RGB':
-            bg_imagen = bg_imagen.convert('RGB')
+        img_arr = st.session_state.imagen_escalada
+        # Si es 2D (grises), se convierte a 3D (RGB)
+        if img_arr.ndim == 2:
+            img_arr = np.stack([img_arr]*3, axis=-1)
+        img_arr = img_arr.astype(np.uint8)
+        bg_imagen = Image.fromarray(img_arr, mode='RGB')
         st.sidebar.markdown("### Seleccionar región")
         canvas_result = st_canvas(
             fill_color="rgba(255, 165, 0, 0.3)",
