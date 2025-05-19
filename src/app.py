@@ -117,6 +117,11 @@ if imagen_subida is not None:
             img_arr = np.stack([img_arr]*3, axis=-1)
         img_arr = img_arr.astype(np.uint8)
         bg_imagen = Image.fromarray(img_arr, mode='RGB')
+        #Redimensionar la imagen para el canvas
+        max_canvas_width = 700
+        if bg_imagen.width > max_canvas_width:
+            new_height = int((bg_imagen.height * max_canvas_width) / bg_imagen.width)
+            bg_imagen = bg_imagen.resize((max_canvas_width, new_height))
         if bg_imagen.mode == 'RGBA':
             bg_imagen = bg_imagen.convert('RGB')
         st.sidebar.markdown("### Seleccionar región")
