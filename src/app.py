@@ -76,10 +76,6 @@ if imagen_subida is not None:
         imagen = Image.fromarray(imagen)
     imagen = color.rgb2gray(np.array(imagen))
     
-    ######### Estado de bg_imagen #########
-    if "imagen_escalada" not in st.session_state:
-        st.session_state.imagen_escalada = None
-    
     # Selección de tipo de escala
     escala_tipo = st.sidebar.selectbox("Selecciona el tipo de escala", ["Aumento de escala", "Redimensionar", "Reducción de escala"])
         
