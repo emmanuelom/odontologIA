@@ -63,6 +63,8 @@ if 'region_binarizada' not in st.session_state:
     st.session_state.region_binarizada = None
 if 'region_bordes' not in st.session_state:
     st.session_state.region_bordes = None
+if 'imagen_escalada' not in st.session_state:
+    st.session_state.imagen_escalada = None
 
 # SEC-1: Cargar una imagen
 imagen_subida = st.file_uploader("Sube una imagen", type=["jpg", "jpeg", "png"], key="file_uploader")
