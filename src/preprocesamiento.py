@@ -76,11 +76,15 @@ def segmentar_bordes(imagen, sigma=1.0):
 
 ######### Operadores morfológicos #########
 def erosionar(imagen, kernel_size=(3, 3), iterations=1):
+    if isinstance(imagen, Image.Image):
+        imagen = np.array(imagen)
     kernel = np.ones(kernel_size, np.uint8)
     imagen_erosionada = cv2.erode(imagen, kernel, iterations=iterations)
     return Image.fromarray(imagen_erosionada)
 
 def dilatar(imagen, kernel_size=(3, 3), iterations=1):
+    if isinstance(imagen, Image.Image):
+        imagen = np.array(imagen)
     kernel = np.ones(kernel_size, np.uint8)
     imagen_dilatada = cv2.dilate(imagen, kernel, iterations=iterations)
     return Image.fromarray(imagen_dilatada)
