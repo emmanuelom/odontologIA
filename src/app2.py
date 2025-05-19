@@ -114,9 +114,10 @@ if imagen_subida is not None:
     # SEC-2: Seleccionar región con Cropper
     if st.session_state.imagen_escalada is not None and st.session_state.show_cropper:
         # Convert imagen_escalada (NumPy array) a PIL Image en modo RGB para Crapping
-        img_pil = Image.fromarray(st.session_state.imagen_escalada)
-        if img_pil.mode != 'RGB':
-            img_pil = img_pil.convert('RGB')
+        img_arr = st.session_state.imagen_escalada
+        if img_arr.ndim == 2:  # Si es una imagen en escala de grises
+            img_arr = np.stack((img_arr,) * 3, axis=-1)  # Convertir a RGB
+        img_pil = Image.fromarray(img_arr.astype(np.uint8), mode='RGB')
 
         # Use st_cropper as a widget for cropping the image
         cropped_img = st_cropper(img_pil)  # This is the correct way to use it
