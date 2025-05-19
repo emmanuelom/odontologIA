@@ -111,10 +111,12 @@ if imagen_subida is not None:
     st.sidebar.button("Seleccionar región", on_click=activar_cropper, key="select_region_btn")
 
     
-    # SEC-2: Seleccionar región con Croppper
+    # SEC-2: Seleccionar región con Cropper
     if st.session_state.imagen_escalada is not None and st.session_state.show_cropper:
-        # Convert imagen_escalada (NumPy array) to PIL Image for Cropping
+        # Convert imagen_escalada (NumPy array) a PIL Image en modo RGB para Crapping
         img_pil = Image.fromarray(st.session_state.imagen_escalada)
+        if img_pil.mode != 'RGB':
+            img_pil = img_pil.convert('RGB')
 
         # Use st_cropper as a widget for cropping the image
         cropped_img = st_cropper(img_pil)  # This is the correct way to use it
