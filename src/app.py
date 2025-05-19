@@ -114,6 +114,8 @@ if imagen_subida is not None:
     # SEC-2: Seleccionar región
     if st.session_state.imagen_escalada is not None and st.session_state.show_canvas:
         bg_imagen = Image.fromarray(st.session_state.imagen_escalada) # imagen en el drawable canvas
+        if bg_imagen.mode != 'RGB':
+            bg_imagen = bg_imagen.convert('RGB')
         st.sidebar.markdown("### Seleccionar región")
         canvas_result = st_canvas(
             fill_color="rgba(255, 165, 0, 0.3)",
