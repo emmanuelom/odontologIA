@@ -160,6 +160,12 @@ if imagen_subida is not None:
             # SEC-8: Segmentación por bordes
             sigma_bordes = st.sidebar.slider("Sigma para detección de bordes", 0.1, 5.0, 1.0)
             if st.sidebar.button("Aplicar segmentación por bordes"):
+                #Convertir cropped_img a escala de grises si es necesario
+                img_bordes = np.array(cropped_img)
+                if img_bordes.ndim == 3:
+                    from skimage.color import rgb2gray
+                    img_bordes = rgb2gray(img_bordes)
+                # Asegurarse de que la imagen esté en el rango correcto
                 region_bordes = segmentar_bordes(np.array(cropped_img), sigma=sigma_bordes)
                 region_bordes = (region_bordes * 255).astype(np.uint8)
                 st.session_state.region_bordes = region_bordes
