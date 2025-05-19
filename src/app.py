@@ -117,6 +117,8 @@ if imagen_subida is not None:
             img_arr = np.stack([img_arr]*3, axis=-1)
         img_arr = img_arr.astype(np.uint8)
         bg_imagen = Image.fromarray(img_arr, mode='RGB')
+        if bg_imagen.mode == 'RGBA':
+            bg_imagen = bg_imagen.convert('RGB')
         st.sidebar.markdown("### Seleccionar región")
         canvas_result = st_canvas(
             fill_color="rgba(255, 165, 0, 0.3)",
