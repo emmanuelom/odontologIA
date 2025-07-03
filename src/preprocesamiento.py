@@ -8,6 +8,16 @@ import streamlit as st
 
 
 
+def logo_segun_tema():
+    url_logo_claro = "https://www.lasallebajio.edu.mx/comunidad/images/imagotipos/lasallebajio_NEGRO.png"
+    url_logo_oscuro = "https://www.lasallebajio.edu.mx/comunidad/images/imagotipos/lasallebajio_BLANCO.png"
+    opcion = st.sidebar.radio("Selecciona el tema del logo", ["Claro", "Oscuro"])
+    logo_url = url_logo_claro if opcion == "Claro" else url_logo_oscuro
+    st.markdown(
+        f'<div style="display:flex;justify-content:center;"><img src="{logo_url}" width="300"></div>',
+        unsafe_allow_html=True
+    )
+
 ######### Seleccionar region #########
 def seleccionar_region(imagen, left, top, right, bottom):
     region = imagen.crop((left, top, right, bottom))

@@ -1,7 +1,7 @@
 import streamlit as st 
 from streamlit_cropper import st_cropper
 from io_img import cargar_imagen, guardar_imagen
-from preprocesamiento import mejorar_contraste, seleccionar_region, mejorar_contraste_clahe, binarizar_otsu, binarizar_manual, segmentar_umbral, segmentar_bordes, erosionar, dilatar, binarizar_rango
+from preprocesamiento import mejorar_contraste, seleccionar_region, mejorar_contraste_clahe, binarizar_otsu, binarizar_manual, segmentar_umbral, segmentar_bordes, erosionar, dilatar, binarizar_rango, logo_segun_tema
 from PIL import Image
 import numpy as np
 from skimage import color
@@ -40,9 +40,10 @@ st.markdown(
     unsafe_allow_html=True
 )
 
+
 # Inicio
 # Imagen institucional
-st.markdown('<div class="center"><img src="https://www.lasallebajio.edu.mx/comunidad/images/imagotipos/Elementos%20Gráficos/Salle%20Bajío%2011.png" width="300"></div>', unsafe_allow_html=True)
+logo_segun_tema()
 st.markdown("""<h1 class='stTitle'>Bienvenido a odontolog<span style='color: #4CAF50;'>IA</span></h1>""", unsafe_allow_html=True)
 st.markdown("<p class='stMarkdown'>Carga una imagen para comenzar</p>", unsafe_allow_html=True)
 
