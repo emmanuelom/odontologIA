@@ -43,7 +43,9 @@ st.markdown(
 
 # Inicio
 # Imagen institucional
-logo_segun_tema()
+col1, col2, col3 = st.columns([2,3,2])
+with col2:
+    st.image("data/lasalleuni.png", width=320)
 st.markdown("""<h1 class='stTitle'>Bienvenido a odontolog<span style='color: #4CAF50;'>IA</span></h1>""", unsafe_allow_html=True)
 st.markdown("<p class='stMarkdown'>Carga una imagen para comenzar</p>", unsafe_allow_html=True)
 

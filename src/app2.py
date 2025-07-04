@@ -1,7 +1,7 @@
 import streamlit as st
 from streamlit_cropper import st_cropper
 from io_img import cargar_imagen, guardar_imagen
-from preprocesamiento import mejorar_contraste, seleccionar_region, mejorar_contraste_clahe, binarizar_otsu, binarizar_manual, segmentar_umbral, segmentar_bordes, erosionar, dilatar, binarizar_rango, logo_segun_tema
+from preprocesamiento import mejorar_contraste, seleccionar_region, mejorar_contraste_clahe, binarizar_otsu, binarizar_manual, segmentar_umbral, segmentar_bordes, erosionar, dilatar, binarizar_rango
 from PIL import Image
 import numpy as np
 from skimage import color
@@ -11,6 +11,7 @@ from skimage.transform import resize, rescale, downscale_local_mean
 st.markdown(
     """
     <style>
+    
     .stButton > button {
         width: 100%;
         padding: 10px 50px;
@@ -43,7 +44,9 @@ st.markdown(
 
 # Inicio
 # Imagen 
-st.markdown(logo_segun_tema(), unsafe_allow_html=True)
+col1, col2, col3 = st.columns([2,3,2])
+with col2:
+    st.image("data/lasalleuni.png", width=320)
 st.markdown("""<h1 class='stTitle'>Bienvenido a odontolog<span style='color: #4CAF50;'>IA</span></h1>""", unsafe_allow_html=True)
 st.markdown("<p class='stMarkdown'>Carga una imagen para comenzar</p>", unsafe_allow_html=True)
 
