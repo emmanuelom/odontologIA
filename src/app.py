@@ -46,7 +46,7 @@ st.markdown(
 # Imagen institucional
 col1, col2, col3 = st.columns([2,3,2])
 with col2:
-    st.image("data/lasalleuni.png", width=320)
+    st.image("../data/lasalleuni.png", width=320)
 st.markdown("""<h1 class='stTitle'>Bienvenido a odontolog<span style='color: #4CAF50;'>IA</span></h1>""", unsafe_allow_html=True)
 st.markdown("<p class='stMarkdown'>Carga una imagen para comenzar</p>", unsafe_allow_html=True)
 
@@ -59,7 +59,7 @@ st.sidebar.markdown(
     unsafe_allow_html=True
 )
 
-# Inicializar claves en st.session_state si no existen
+#region ESTADOS DE SESIÓN
 if 'region_seleccionada' not in st.session_state:
     st.session_state.region_seleccionada = None
 if 'region_binarizada' not in st.session_state:
@@ -86,6 +86,8 @@ if 'region_dilatada' not in st.session_state:
     st.session_state.region_dilatada = None
 if 'region_bordes' not in st.session_state:
     st.session_state.region_bordes = None
+
+#endregion
 
 
 ## Pestañas en Sidebar: Imagen(Image), Realce(Enhancement), Filto(Filter)
