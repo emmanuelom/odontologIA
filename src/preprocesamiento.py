@@ -88,3 +88,47 @@ def dilatar(imagen, kernel_size=(3, 3), iterations=1):
     imagen_dilatada = cv2.dilate(imagen, kernel, iterations=iterations)
     return Image.fromarray(imagen_dilatada)
 
+######### Umbral óptimo con histograma y CDF #########
+def encontrar_umbral_optimo(imagen):
+    """
+    Encuentra el umbral óptimo usando Otsu y genera histograma y CDF
+    Retorna: umbral_optimo, imagen_binarizada, figura_histograma
+    """
+    if isinstance(imagen, Image.Image):
+        imagen_array = np.array(imagen.convert('L'))
+    elif len(imagen.shape) == 3:
+        imagen_array = cv2.cvtColor(imagen, cv2.COLOR_BGR2GRAY)
+    else:
+        imagen_array = imagen
+    
+    # Calcular umbral de Otsu
+    umbral_optimo, imagen_binarizada = cv2.threshold(imagen_array, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    
+    # Crear histograma y CDF
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(8, 3))
+    
+    # Histograma
+    hist, bins = np.histogram(imagen_array.flatten(), bins=256, range=[0, 256])
+    ax1.bar(bins[:-1], hist, width=1, color='gray', alpha=0.7)
+    ax1.axvline(x=umbral_optimo, color='red', linestyle='--', linewidth=2, label=f'Umbral óptimo: {int(umbral_optimo)}')
+    ax1.set_title('Histograma')
+    ax1.set_xlabel('Intensidad de píxel')
+    ax1.set_ylabel('Frecuencia')
+    ax1.legend()
+    ax1.grid(True, alpha=0.3)
+    
+    # CDF (Función de Distribución Acumulativa)
+    cdf = np.cumsum(hist)
+    cdf_normalized = cdf * hist.max() / cdf.max()
+    ax2.plot(bins[:-1], cdf_normalized, color='blue', linewidth=2)
+    ax2.axvline(x=umbral_optimo, color='red', linestyle='--', linewidth=2, label=f'Umbral óptimo: {int(umbral_optimo)}')
+    ax2.set_title('CDF Normalizada')
+    ax2.set_xlabel('Intensidad de píxel')
+    ax2.set_ylabel('CDF')
+    ax2.legend()
+    ax2.grid(True, alpha=0.3)
+    
+    plt.tight_layout()
+    
+    return int(umbral_optimo), Image.fromarray(imagen_binarizada), fig
+
