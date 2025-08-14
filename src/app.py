@@ -46,7 +46,35 @@ st.markdown(
 # Imagen institucional
 col1, col2, col3 = st.columns([2,3,2])
 with col2:
-    st.image("data/lasalleuni.png", width=320)
+    # Manejo robusto de la ruta del logo
+    import os
+    from pathlib import Path
+    
+    def get_logo_path():
+        """Busca el logo en diferentes ubicaciones posibles"""
+        possible_paths = [
+            "data/lasalleuni.png",           # Para Streamlit Cloud
+            "../data/lasalleuni.png",        # Para desarrollo local
+            "./data/lasalleuni.png",         # Alternativa
+            "src/../data/lasalleuni.png"     # Otra alternativa
+        ]
+        
+        for path in possible_paths:
+            if Path(path).exists():
+                return path
+        return None
+    
+    logo_path = get_logo_path()
+    if logo_path:
+        st.image(logo_path, width=320)
+    else:
+        # Fallback elegante si no encuentra el logo
+        st.markdown("""
+        <div style='text-align: center; padding: 20px; background-color: #f8f9fa; border-radius: 10px; border: 2px solid #43aa8b;'>
+            <h2 style='color: #43aa8b; margin: 0;'>🦷 Universidad De La Salle</h2>
+            <p style='color: #666; margin: 5px 0 0 0;'>Facultad de Ingeniería</p>
+        </div>
+        """, unsafe_allow_html=True)
 st.markdown("""<h1 class='stTitle'>Bienvenido a odontolog<span style='color: #4CAF50;'>IA</span></h1>""", unsafe_allow_html=True)
 st.markdown("<p class='stMarkdown'>Carga una imagen para comenzar</p>", unsafe_allow_html=True)
 
@@ -59,7 +87,7 @@ st.sidebar.markdown(
     unsafe_allow_html=True
 )
 
-# Inicializar claves en st.session_state si no existen
+#region ESTADOS DE SESIÓN
 if 'region_seleccionada' not in st.session_state:
     st.session_state.region_seleccionada = None
 if 'region_binarizada' not in st.session_state:
@@ -86,6 +114,8 @@ if 'region_dilatada' not in st.session_state:
     st.session_state.region_dilatada = None
 if 'region_bordes' not in st.session_state:
     st.session_state.region_bordes = None
+
+#endregion
 
 
 ## Pestañas en Sidebar: Imagen(Image), Realce(Enhancement), Filto(Filter)

@@ -1,7 +1,7 @@
 import streamlit as st
 from streamlit_cropper import st_cropper
 from io_img import cargar_imagen, guardar_imagen
-from preprocesamiento import mejorar_contraste, seleccionar_region, mejorar_contraste_clahe, binarizar_otsu, binarizar_manual, segmentar_umbral, segmentar_bordes, erosionar, dilatar, binarizar_rango
+from preprocesamiento import mejorar_contraste, seleccionar_region, mejorar_contraste_clahe, binarizar_otsu, binarizar_manual, segmentar_umbral, segmentar_bordes, erosionar, dilatar, binarizar_rango, guardar_accion, btn_deshacer, btn_rehacer, reset_og
 from PIL import Image
 import numpy as np
 from skimage import color
@@ -59,7 +59,7 @@ st.sidebar.markdown(
     unsafe_allow_html=True
 )
 
-# Inicializar claves en st.session_state si no existen
+#region ESTADOS DE SESIÓN
 if 'region_seleccionada' not in st.session_state:
     st.session_state.region_seleccionada = None
 if 'region_binarizada' not in st.session_state:
@@ -87,6 +87,8 @@ if 'region_dilatada' not in st.session_state:
 if 'region_bordes' not in st.session_state:
     st.session_state.region_bordes = None
 
+
+#endregion
 
 ## Pestañas en Sidebar: Imagen(Image), Realce(Enhancement), Filto(Filter)
 tab_imagen, tab_realce, tab_filtro = st.sidebar.tabs(["Imagen", "Realce", "Filtro"])
@@ -231,18 +233,18 @@ if imagen_subida is not None:
                 elif tipo_segmentacion == "Bordes" and st.session_state.region_bordes is not None:
                     region_erosionada = erosionar(st.session_state.region_bordes)
                     st.session_state.region_erosionada = region_erosionada
-                    st.session_state.tipo_erosion = "Bordes"  
-                
+                    st.session_state.tipo_erosion = "Bordes"
+            
             # DILATACIÓN
             if st.button("Aplicar dilatación"):
                 if tipo_segmentacion == "Umbrales" and st.session_state.region_segmentada is not None:
                     region_dilatada = dilatar(st.session_state.region_segmentada)
                     st.session_state.region_dilatada = region_dilatada
-                    st.session_state.tipo_dilatacion = "Umbrales"  
+                    st.session_state.tipo_dilatacion = "Umbrales"
                 elif tipo_segmentacion == "Bordes" and st.session_state.region_bordes is not None:
                     region_dilatada = dilatar(st.session_state.region_bordes)
                     st.session_state.region_dilatada = region_dilatada
-                    st.session_state.tipo_dilatacion = "Bordes" 
+                    st.session_state.tipo_dilatacion = "Bordes"
                 else:
                     st.warning("Primero aplica la segmentación seleccionada")
 
@@ -267,4 +269,7 @@ if imagen_subida is not None:
     if st.session_state.region_dilatada is not None:
         tipo = st.session_state.tipo_dilatacion if "tipo_dilatacion" in st.session_state else "Desconocido"
         st.image(st.session_state.region_dilatada, caption=f"Región dilatada ({tipo})", use_column_width=True)
-        
+
+
+
+
