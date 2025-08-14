@@ -6,6 +6,11 @@ from PIL import Image
 import numpy as np
 from skimage import color
 from skimage.transform import resize, rescale, downscale_local_mean
+import matplotlib.pyplot as plt
+
+# Configurar matplotlib para que no use GUI
+import matplotlib
+matplotlib.use('Agg')
 
 # Estilos
 st.markdown(
@@ -46,7 +51,7 @@ st.markdown(
 # Imagen institucional
 col1, col2, col3 = st.columns([2,3,2])
 with col2:
-    st.image("data/lasalleuni.png", width=320)
+    st.image("src/data/lasalleuni.png", width=320)
 st.markdown("""<h1 class='stTitle'>Bienvenido a odontolog<span style='color: #4CAF50;'>IA</span></h1>""", unsafe_allow_html=True)
 st.markdown("<p class='stMarkdown'>Carga una imagen para comenzar</p>", unsafe_allow_html=True)
 
@@ -134,7 +139,7 @@ if imagen_subida is not None:
         st.image(st.session_state.imagen_escalada, caption="Imagen Original", use_column_width=True)
     
     def actualizar_imagen():
-        st.experimental_rerun()
+        st.rerun()
     
     def activar_cropper():
         st.session_state.show_cropper = True
@@ -209,7 +214,9 @@ if imagen_subida is not None:
     if st.session_state.region_clahe is not None:
         with st.expander("📈 Ver imagen con CLAHE aplicado"):
             st.image(st.session_state.region_clahe, caption="Región con CLAHE aplicado", use_column_width=True)
-        
+    
+    # Solo mostrar la pestaña de filtro si hay una región seleccionada
+    if st.session_state.cropped_img is not None:
         #region FILTRO
         with tab_filtro:
             st.image(st.session_state.cropped_img, caption="Región seleccionada", use_column_width=True)
