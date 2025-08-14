@@ -100,8 +100,8 @@ def encontrar_umbral_optimo(imagen):
         imagen_array = cv2.cvtColor(imagen, cv2.COLOR_BGR2GRAY)
     else:
         imagen_array = imagen
-    
-    # Calcular umbral de Otsu
+
+    # Calcular umbral de Otsu AQUI SE APLICA EL UMBRAL OPTIMO, el calculo se realizó con ayuda de IA
     umbral_optimo, imagen_binarizada = cv2.threshold(imagen_array, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
     
     # Crear histograma y CDF

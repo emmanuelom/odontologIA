@@ -12,6 +12,52 @@ import matplotlib.pyplot as plt
 import matplotlib
 matplotlib.use('Agg')
 
+# Funciones para manejo del historial
+def guardar_estado_actual():
+    """Guarda el estado actual de la imagen en el historial"""
+    estado = {
+        'cropped_img': st.session_state.get('cropped_img'),
+        'region_mejorada': st.session_state.get('region_mejorada'),
+        'region_clahe': st.session_state.get('region_clahe'),
+        'region_binarizada': st.session_state.get('region_binarizada'),
+        'region_binarizada_manual': st.session_state.get('region_binarizada_manual'),
+        'region_segmentada': st.session_state.get('region_segmentada'),
+        'region_bordes': st.session_state.get('region_bordes'),
+        'region_erosionada': st.session_state.get('region_erosionada'),
+        'region_dilatada': st.session_state.get('region_dilatada'),
+        'region_umbral_optimo': st.session_state.get('region_umbral_optimo'),
+        'umbral_optimo': st.session_state.get('umbral_optimo'),
+        'histograma_fig': st.session_state.get('histograma_fig')
+    }
+    if 'historial_imagenes' not in st.session_state:
+        st.session_state.historial_imagenes = []
+    st.session_state.historial_imagenes.append(estado)
+
+def deshacer_ultimo_cambio():
+    """Deshace el último cambio realizado"""
+    if 'historial_imagenes' in st.session_state and len(st.session_state.historial_imagenes) > 0:
+        estado_anterior = st.session_state.historial_imagenes.pop()
+        for key, value in estado_anterior.items():
+            st.session_state[key] = value
+        st.session_state.ultima_accion = "Deshecho"
+        st.success("✅ Último cambio deshecho exitosamente")
+    else:
+        st.warning("⚠️ No hay cambios para deshacer")
+
+def reiniciar_aplicacion():
+    """Reinicia la aplicación eliminando todas las imágenes"""
+    keys_to_reset = [
+        'cropped_img', 'region_mejorada', 'region_clahe', 'region_binarizada',
+        'region_binarizada_manual', 'region_segmentada', 'region_bordes',
+        'region_erosionada', 'region_dilatada', 'region_umbral_optimo',
+        'umbral_optimo', 'histograma_fig', 'show_cropper', 'historial_imagenes'
+    ]
+    for key in keys_to_reset:
+        if key in st.session_state:
+            del st.session_state[key]
+    st.session_state.ultima_accion = "Reiniciado"
+    st.success("🔄 Aplicación reiniciada exitosamente")
+
 # Estilos
 st.markdown(
     """
@@ -23,11 +69,11 @@ st.markdown(
         margin-bottom: 10px;
         font-size: 16px;
         color: white;
-        background-color: #43aa8b;
+        background-color: #45a049;
         border-radius: 5px;
     }
     .stButton > button:hover {
-        background-color: #45a049;
+        background-color: #43aa8b;
         color: white;
         border: white;
     }
@@ -36,10 +82,25 @@ st.markdown(
     }
     .stMarkdown {
         text-align: center;
-    
+    }
     .center {
         display: flex;
         justify-content: center;
+    }
+    /* Estilos especiales para botones de control */
+    div[data-testid="column"]:first-child .stButton > button {
+        background-color: #f39c12;
+        border: 2px solid #e67e22;
+    }
+    div[data-testid="column"]:first-child .stButton > button:hover {
+        background-color: #e67e22;
+    }
+    div[data-testid="column"]:nth-child(2) .stButton > button {
+        background-color: #e74c3c;
+        border: 2px solid #c0392b;
+    }
+    div[data-testid="column"]:nth-child(2) .stButton > button:hover {
+        background-color: #c0392b;
     }
     </style>
     """,
@@ -54,6 +115,19 @@ with col2:
     st.image("src/data/lasalleuni.png", width=320)
 st.markdown("""<h1 class='stTitle'>Bienvenido a odontolog<span style='color: #4CAF50;'>IA</span></h1>""", unsafe_allow_html=True)
 st.markdown("<p class='stMarkdown'>Carga una imagen para comenzar</p>", unsafe_allow_html=True)
+
+# Botones de control visibles
+col_btn1, col_btn2, col_btn3 = st.columns([1, 1, 1])
+with col_btn1:
+    if st.button("↶ Deshacer", help="Deshace el último cambio realizado", key="undo_btn"):
+        deshacer_ultimo_cambio()
+
+with col_btn2:
+    if st.button("🔄 Reiniciar", help="Reinicia la aplicación y elimina todas las imágenes", key="reset_btn"):
+        reiniciar_aplicacion()
+
+with col_btn3:
+    st.write("")  # Columna vacía para balance
 
 st.sidebar.markdown(
     """
@@ -97,6 +171,10 @@ if 'region_umbral_optimo' not in st.session_state:
     st.session_state.region_umbral_optimo = None
 if 'histograma_fig' not in st.session_state:
     st.session_state.histograma_fig = None
+if 'historial_imagenes' not in st.session_state:
+    st.session_state.historial_imagenes = []
+if 'ultima_accion' not in st.session_state:
+    st.session_state.ultima_accion = None
 
 #endregion
 
@@ -172,6 +250,7 @@ if imagen_subida is not None:
             
             # Botón para encontrar umbral óptimo
             if st.button("🎯 Encontrar umbral óptimo", help="Encuentra automáticamente el mejor umbral usando el método de Otsu"):
+                guardar_estado_actual()  # Guardar estado antes del cambio
                 umbral_optimo, region_umbral_optimo, histograma_fig = encontrar_umbral_optimo(st.session_state.cropped_img)
                 st.session_state.umbral_optimo = umbral_optimo
                 st.session_state.region_umbral_optimo = region_umbral_optimo
@@ -188,6 +267,7 @@ if imagen_subida is not None:
                 # SEC-3: Contraste
                 factor = st.slider("Ajustar contraste", 0.5, 3.0, 1.0, key="contrast_slider")
                 if st.button("Mejorar contraste"):
+                    guardar_estado_actual()  # Guardar estado antes del cambio
                     region_mejorada = mejorar_contraste(st.session_state.cropped_img, factor)
                     st.session_state.region_mejorada = region_mejorada
             
@@ -196,6 +276,7 @@ if imagen_subida is not None:
                 clahe_clip = st.slider("Clip Limit para CLAHE", 0.01, 4.0, 2.0, key="clip_limit")
                 clahe_grid = st.slider("Tamaño de la cuadrícula para CLAHE", 1, 16, 8, key="grid_size")
                 if st.button("Aplicar contraste CLAHE"):
+                    guardar_estado_actual()  # Guardar estado antes del cambio
                     region_clahe = mejorar_contraste_clahe(st.session_state.cropped_img, clahe_clip=clahe_clip, clahe_grid=(clahe_grid, clahe_grid))
                     st.session_state.region_clahe = region_clahe
         
@@ -222,6 +303,7 @@ if imagen_subida is not None:
             st.image(st.session_state.cropped_img, caption="Región seleccionada", use_column_width=True)
             # SEC-5: Binarización con OTSU
             if st.button("Aplicar binarización de Otsu"):
+                guardar_estado_actual()  # Guardar estado antes del cambio
                 region_binarizada = binarizar_otsu(st.session_state.cropped_img)
                 st.session_state.region_binarizada = region_binarizada
         
