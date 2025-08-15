@@ -285,7 +285,8 @@ if imagen_subida is not None:
         
     # Mostrar resultado del umbral óptimo si existe
     if st.session_state.region_umbral_optimo is not None:
-        st.image(st.session_state.region_umbral_optimo, caption=f"🎯 Binarización con umbral óptimo ({st.session_state.umbral_optimo})", use_column_width=True)
+        with st.expander("🎯 Ver imagen con binarización óptima"):
+            st.image(st.session_state.region_umbral_optimo, caption=f"Binarización con umbral óptimo ({st.session_state.umbral_optimo})", use_column_width=True)
         
     # Mostrar contraste mejorado en expander si existe
     if st.session_state.region_mejorada is not None:
@@ -379,7 +380,8 @@ if imagen_subida is not None:
         
     # Mostrar imagen binarizada con Otsu como resultado principal
     if st.session_state.region_binarizada is not None:
-        st.image(st.session_state.region_binarizada, caption="🔲 Región binarizada con Otsu", use_column_width=True)
+        with st.expander("🔲 Ver imagen binarizada con Otsu"):
+            st.image(st.session_state.region_binarizada, caption="Región binarizada con Otsu", use_column_width=True)
 
     # Mostrar otras imágenes en expanders para no saturar la vista
     if st.session_state.region_binarizada_manual is not None:
@@ -397,9 +399,11 @@ if imagen_subida is not None:
     # Mostrar resultados de operadores morfológicos como resultados principales si existen
     if st.session_state.region_erosionada is not None:
         tipo = st.session_state.tipo_erosion if "tipo_erosion" in st.session_state else "Desconocido"
-        st.image(st.session_state.region_erosionada, caption=f"⚫ Región erosionada ({tipo})", use_column_width=True)
+        with st.expander(f"⚫ Ver imagen con erosión ({tipo})"):
+            st.image(st.session_state.region_erosionada, caption=f"Región erosionada ({tipo})", use_column_width=True)
 
     if st.session_state.region_dilatada is not None:
         tipo = st.session_state.tipo_dilatacion if "tipo_dilatacion" in st.session_state else "Desconocido"
-        st.image(st.session_state.region_dilatada, caption=f"⚪ Región dilatada ({tipo})", use_column_width=True)
+        with st.expander(f"⚪ Ver imagen con dilatación ({tipo})"):
+            st.image(st.session_state.region_dilatada, caption=f"Región dilatada ({tipo})", use_column_width=True)
         
