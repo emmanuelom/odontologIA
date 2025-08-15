@@ -73,9 +73,9 @@ st.markdown(
         border-radius: 5px;
     }
     .stButton > button:hover {
-        background-color: #43aa8b;
-        color: white;
-        border: white;
+        background-color: transparent;
+        color: #45a049;
+        border: 2px solid #45a049;
     }
     .stTitle {
         text-align: center;
@@ -91,6 +91,8 @@ st.markdown(
     div[data-testid="column"]:first-child .stButton > button {
         background-color: #f39c12;
         border: 2px solid #e67e22;
+        justify-content: center;
+        align-items: center;
     }
     div[data-testid="column"]:first-child .stButton > button:hover {
         background-color: #e67e22;
@@ -98,9 +100,39 @@ st.markdown(
     div[data-testid="column"]:nth-child(2) .stButton > button {
         background-color: #e74c3c;
         border: 2px solid #c0392b;
+        justify-content: center;
+        align-items: center;
     }
     div[data-testid="column"]:nth-child(2) .stButton > button:hover {
         background-color: #c0392b;
+    }
+    section [data-testid="stVerticalBlock"] .stButton > button {
+        width: 100%;
+        padding: 10px 50px;
+        margin-bottom: 10px;
+        font-size: 16px;
+        color: white;
+        background-color: #45a049;
+        border-radius: 5px;
+    }
+    section [data-testid="stVerticalBlock"] .stButton > button:hover {
+        background-color: transparent;
+        color: #45a049;
+        border: 2px solid #45a049;
+    }
+    section[data-testid="stSidebar"] .stButton > button {
+        width: 100% !important;
+        padding: 10px 50px !important;
+        margin-bottom: 10px !important;
+        font-size: 16px !important;
+        color: white !important;
+        background-color: #45a049 !important;
+        border-radius: 5px !important;
+    }
+    section[data-testid="stSidebar"] .stButton > button:hover {
+        background-color: transparent !important;
+        color: #45a049 !important;
+        border: 2px solid #45a049 !important;
     }
     </style>
     """,
@@ -109,25 +141,22 @@ st.markdown(
 
 
 # Inicio
-# Imagen institucional
-col1, col2, col3 = st.columns([2,3,2])
-with col2:
-    st.image("src/data/lasalleuni.png", width=320)
-st.markdown("""<h1 class='stTitle'>Bienvenido a odontolog<span style='color: #4CAF50;'>IA</span></h1>""", unsafe_allow_html=True)
-st.markdown("<p class='stMarkdown'>Carga una imagen para comenzar</p>", unsafe_allow_html=True)
-
-# Botones de control visibles
-col_btn1, col_btn2, col_btn3 = st.columns([1, 1, 1])
-with col_btn1:
+# --- Botones de control en la parte superior izquierda ---
+top_col1, top_col2 = st.columns([4, 1])
+with top_col1:
     if st.button("↶ Deshacer", help="Deshace el último cambio realizado", key="undo_btn"):
         deshacer_ultimo_cambio()
-
-with col_btn2:
+with top_col2:
     if st.button("🔄 Reiniciar", help="Reinicia la aplicación y elimina todas las imágenes", key="reset_btn"):
         reiniciar_aplicacion()
 
-with col_btn3:
-    st.write("")  # Columna vacía para balance
+# Imagen institucional
+col1, col2, col3 = st.columns([2,3,2])
+with col2:
+    st.image("data/lasalleuni.png", width=320)
+st.markdown("""<h1 class='stTitle'>Bienvenido a odontolog<span style='color: #4CAF50;'>IA</span></h1>""", unsafe_allow_html=True)
+st.markdown("<p class='stMarkdown'>Carga una imagen para comenzar</p>", unsafe_allow_html=True)
+
 
 st.sidebar.markdown(
     """
@@ -217,7 +246,7 @@ if imagen_subida is not None:
         st.image(st.session_state.imagen_escalada, caption="Imagen Original", use_column_width=True)
     
     def actualizar_imagen():
-        st.rerun()
+        st.experimental_rerun()
     
     def activar_cropper():
         st.session_state.show_cropper = True
@@ -249,7 +278,7 @@ if imagen_subida is not None:
             st.image(st.session_state.cropped_img, caption="Región seleccionada", use_column_width=True)
             
             # Botón para encontrar umbral óptimo
-            if st.button("🎯 Encontrar umbral óptimo", help="Encuentra automáticamente el mejor umbral usando el método de Otsu"):
+            if st.button("🎯 Encontrar umbral óptimo"):
                 guardar_estado_actual()  # Guardar estado antes del cambio
                 umbral_optimo, region_umbral_optimo, histograma_fig = encontrar_umbral_optimo(st.session_state.cropped_img)
                 st.session_state.umbral_optimo = umbral_optimo
