@@ -106,34 +106,6 @@ st.markdown(
     div[data-testid="column"]:nth-child(2) .stButton > button:hover {
         background-color: #c0392b;
     }
-    section [data-testid="stVerticalBlock"] .stButton > button {
-        width: 100%;
-        padding: 10px 50px;
-        margin-bottom: 10px;
-        font-size: 16px;
-        color: white;
-        background-color: #45a049;
-        border-radius: 5px;
-    }
-    section [data-testid="stVerticalBlock"] .stButton > button:hover {
-        background-color: transparent;
-        color: #45a049;
-        border: 2px solid #45a049;
-    }
-    section[data-testid="stSidebar"] .stButton > button {
-        width: 100% !important;
-        padding: 10px 50px !important;
-        margin-bottom: 10px !important;
-        font-size: 16px !important;
-        color: white !important;
-        background-color: #45a049 !important;
-        border-radius: 5px !important;
-    }
-    section[data-testid="stSidebar"] .stButton > button:hover {
-        background-color: transparent !important;
-        color: #45a049 !important;
-        border: 2px solid #45a049 !important;
-    }
     </style>
     """,
     unsafe_allow_html=True
@@ -153,7 +125,7 @@ with top_col2:
 # Imagen institucional
 col1, col2, col3 = st.columns([2,3,2])
 with col2:
-    st.image("data/lasalleuni.png", width=320)
+    st.image("src/data/lasalleuni.png", width=320)
 st.markdown("""<h1 class='stTitle'>Bienvenido a odontolog<span style='color: #4CAF50;'>IA</span></h1>""", unsafe_allow_html=True)
 st.markdown("<p class='stMarkdown'>Carga una imagen para comenzar</p>", unsafe_allow_html=True)
 
