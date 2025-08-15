@@ -125,7 +125,7 @@ with top_col2:
 # Imagen institucional
 col1, col2, col3 = st.columns([2,3,2])
 with col2:
-    st.image("src/data/lasalleuni.png", width=320)
+    st.image("data/lasalleuni.png", width=320)
 st.markdown("""<h1 class='stTitle'>Bienvenido a odontolog<span style='color: #4CAF50;'>IA</span></h1>""", unsafe_allow_html=True)
 st.markdown("<p class='stMarkdown'>Carga una imagen para comenzar</p>", unsafe_allow_html=True)
 
@@ -198,16 +198,16 @@ if imagen_subida is not None:
     
     # Selección de tipo de escala
     with tab_imagen:
-        escala_tipo = st.selectbox("Selecciona el tipo de escala", ["Aumento de escala", "Redimensionar", "Reducción de escala"])
+        escala_tipo = st.selectbox("Tamaño de Imagen", ["Agrandar imagen", "Redimensionar", "Reducir imagen"])
         
-        if escala_tipo == "Aumento de escala":
+        if escala_tipo == "Agrandar imagen":
             escala_factor = st.slider("Factor de escala", 0.1, 0.5, 0.25)
             imagen_escalada = rescale(imagen, escala_factor, anti_aliasing=True)
         elif escala_tipo == "Redimensionar":
             img_width = st.number_input("Ancho de la imagen", min_value=100, max_value=900, value=min(imagen.shape[1], 900))
             img_height = st.number_input("Alto de la imagen", min_value=100, max_value=900, value=min(imagen.shape[0], 900))
             imagen_escalada = resize(imagen, (img_height, img_width), anti_aliasing=True)
-        elif escala_tipo == "Reducción de escala":
+        elif escala_tipo == "Reducir imagen":
             downscale_factor = st.slider("Factor de downscale", 1, 10, 2)
             imagen_escalada = downscale_local_mean(imagen, (downscale_factor, downscale_factor))
         
@@ -266,17 +266,17 @@ if imagen_subida is not None:
             # Ajustes avanzados de contraste en expander
             with st.expander("⚙️ Ajustes avanzados de contraste"):
                 # SEC-3: Contraste
-                factor = st.slider("Ajustar contraste", 0.5, 3.0, 1.0, key="contrast_slider")
+                factor = st.slider("Ajustar contraste manualmente", 0.5, 3.0, 1.0, key="contrast_slider")
                 if st.button("Mejorar contraste"):
                     guardar_estado_actual()  # Guardar estado antes del cambio
                     region_mejorada = mejorar_contraste(st.session_state.cropped_img, factor)
                     st.session_state.region_mejorada = region_mejorada
             
                 # SEC-4: Contraste con CLAHE
-                st.markdown("### Mejora de contraste con CLAHE")
-                clahe_clip = st.slider("Clip Limit para CLAHE", 0.01, 4.0, 2.0, key="clip_limit")
-                clahe_grid = st.slider("Tamaño de la cuadrícula para CLAHE", 1, 16, 8, key="grid_size")
-                if st.button("Aplicar contraste CLAHE"):
+                st.markdown("### Mejora automática del contraste")
+                clahe_clip = st.slider("Intensidad", 0.01, 4.0, 2.0, key="clip_limit")
+                clahe_grid = st.slider("Detalle", 1, 16, 8, key="grid_size")
+                if st.button("Aplicar contraste"):
                     guardar_estado_actual()  # Guardar estado antes del cambio
                     region_clahe = mejorar_contraste_clahe(st.session_state.cropped_img, clahe_clip=clahe_clip, clahe_grid=(clahe_grid, clahe_grid))
                     st.session_state.region_clahe = region_clahe
@@ -304,7 +304,7 @@ if imagen_subida is not None:
         with tab_filtro:
             st.image(st.session_state.cropped_img, caption="Región seleccionada", use_column_width=True)
             # SEC-5: Binarización con OTSU
-            if st.button("Aplicar binarización de Otsu"):
+            if st.button("Identificar blancos y negros"):
                 guardar_estado_actual()  # Guardar estado antes del cambio
                 region_binarizada = binarizar_otsu(st.session_state.cropped_img)
                 st.session_state.region_binarizada = region_binarizada
@@ -319,7 +319,7 @@ if imagen_subida is not None:
                     st.session_state.region_binarizada_manual = region_binarizada_manual
             
                 # SEC-7: Segmentación por rango de umbrales
-                st.markdown("### Segmentación por rango de umbrales")
+                st.markdown("### Resaltar por rango")
                 umbral_min, umbral_max = st.slider(
                     "Selecciona el rango de umbrales para segmentación",
                     0.0, 1.0, (0.4, 0.9),
@@ -335,7 +335,7 @@ if imagen_subida is not None:
                         st.error("El umbral mínimo debe ser menor que el umbral máximo.")
                 
                 # SEC-8: Segmentación por bordes
-                st.markdown("### Segmentación por bordes")
+                st.markdown("### Detección de bordes")
                 sigma_bordes = st.slider("Sigma para detección de bordes", 0.1, 5.0, 1.0)
                 if st.button("Aplicar segmentación por bordes"):
                     # Convertir a escala de grises si es necesario
@@ -348,12 +348,12 @@ if imagen_subida is not None:
                     st.session_state.region_bordes = region_bordes
             
             # SEC-9: Operadores morfológicos
-            with st.expander("🔧 Operadores morfológicos"):
+            with st.expander("🔧 Bordes y Áreas"):
                 st.markdown("### Operadores morfológicos")
                 tipo_segmentacion = st.selectbox("Selecciona el tipo de segmentación para aplicar operadores morfológicos", ["Umbrales", "Bordes"])
                 
                 # EROSIÓN
-                if st.button("Aplicar erosión"):
+                if st.button("Reducir detalles"):
                     if tipo_segmentacion == "Umbrales" and st.session_state.region_segmentada is not None:
                         region_erosionada = erosionar(st.session_state.region_segmentada)
                         st.session_state.region_erosionada = region_erosionada
@@ -364,7 +364,7 @@ if imagen_subida is not None:
                         st.session_state.tipo_erosion = "Bordes"  
                     
                 # DILATACIÓN
-                if st.button("Aplicar dilatación"):
+                if st.button("Resaltar detalles"):
                     if tipo_segmentacion == "Umbrales" and st.session_state.region_segmentada is not None:
                         region_dilatada = dilatar(st.session_state.region_segmentada)
                         st.session_state.region_dilatada = region_dilatada
